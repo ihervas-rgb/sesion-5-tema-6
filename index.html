@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sesión 5A – Consolidación: Clasificación de trabajadores y evaluación de la exposición</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+ body{font-family:system-ui,Arial,sans-serif;max-width:1100px;margin:24px;line-height:1.35}
+ h1{margin-bottom:6px}
+ .card{border:1px solid #ddd;border-radius:14px;padding:16px;margin:14px 0}
+ .muted{opacity:.75}
+ input,select{padding:7px;border-radius:8px;border:1px solid #ccc}
+ button{padding:10px 14px;border-radius:10px;border:1px solid #222;background:#fff;cursor:pointer}
+ button:hover{background:#f6f6f6}
+ .ok{outline:3px solid #7ddc7d}
+ .bad{outline:3px solid #ff9a9a}
+ .feedback{font-weight:700;margin-top:8px}
+ .small{font-size:.95rem}
+ label{display:block;margin:4px 0}
+</style>
+</head>
+<body>
+
+<h1>Sesión 5A – Actividad de consolidación</h1>
+<p class="muted small">
+Clasificación de trabajadores expuestos y evaluación de la exposición.  
+Actividad <b>no evaluable</b>, autocorregible.
+</p>
+
+<div class="card">
+<h2>1) Completa los huecos</h2>
+<ol id="huecos"></ol>
+</div>
+
+<div class="card">
+<h2>2) Verdadero / Falso</h2>
+<div id="vf"></div>
+</div>
+
+<div class="card">
+<h2>3) Relaciona concepto y elemento</h2>
+<ol id="relacion"></ol>
+</div>
+
+<div class="card">
+<h2>4) Mini-test (15 preguntas)</h2>
+<ol id="test"></ol>
+</div>
+
+<div class="card">
+<button onclick="corregir()">Corregir</button>
+<button onclick="cargar()">Reiniciar</button>
+<p class="feedback" id="total"></p>
+</div>
+
+<script>
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+
+const HUECOS=[
+ {q:"Los trabajadores que pueden recibir más de ____ mSv/año de dosis efectiva pertenecen a la categoría A.",a:"6"},
+ {q:"Para medir la dosis efectiva se utilizan dosímetros de ____.",a:"solapa"},
+ {q:"La dosimetría individual debe ser realizada por servicios autorizados por el ____.",a:"csn"},
+ {q:"El historial dosimétrico es de carácter ____.",a:"confidencial"}
+];
+
+const VF=[
+ {t:"Los trabajadores de categoría B no necesitan ningún tipo de vigilancia radiológica.",k:false},
+ {t:"El titular debe revisar regularmente la clasificación de los trabajadores.",k:true},
+ {t:"La vigilancia ambiental puede usarse para estimar dosis en trabajadores B.",k:true},
+ {t:"El historial dosimétrico solo incluye dosis normales.",k:false}
+];
+
+const REL=[
+ {q:"Dosímetro de solapa",a:"Dosis efectiva"},
+ {q:"Dosímetro de anillo",a:"Extremidades"},
+ {q:"Dosímetro de hombro",a:"Cristalino"},
+ {q:"Dosimetría de área",a:"Vigilancia ambiental"}
+];
+
+const TEST=[
+ {q:"¿Quién es responsable de clasificar a los trabajadores expuestos?",
+  o:["El CSN","El trabajador","El titular de la práctica o empresa externa","El Servicio de Prevención"],c:2},
+ {q:"Un trabajador que puede recibir más de 6 mSv/año de dosis efectiva pertenece a:",
+  o:["Categoría B","Categoría A","Público","Estudiante"],c:1},
+ {q:"El límite de dosis equivalente en cristalino para categoría A es:",
+  o:["6 mSv","15 mSv","20 mSv","50 mSv"],c:1},
+ {q:"El límite de dosis equivalente en piel y extremidades para categoría A es:",
+  o:["50 mSv","150 mSv","500 mSv","20 mSv"],c:1},
+ {q:"Para la estimación de dosis del personal A es obligatorio:",
+  o:["Dosimetría de área","Dosímetro personal","Solo controles médicos","Estimación indirecta"],c:1},
+ {q:"Los dosímetros de muñeca o anillo miden dosis en:",
+  o:["Cristalino","Piel","Extremidades","Dosis efectiva"],c:2},
+ {q:"La estimación de dosis del personal B puede hacerse mediante:",
+  o:["Dosímetro personal obligatorio","Vigilancia ambiental","Solo control médico","No se estima"],c:1},
+ {q:"La clasificación de los trabajadores debe revisarse:",
+  o:["Solo al inicio","Cada 5 años","Regularmente","Nunca"],c:2},
+ {q:"Antes de iniciar la actividad el titular debe informar sobre:",
+  o:["Solo riesgos","Riesgos, normas PR y embarazo/lactancia","Solo dosímetros","Solo sanciones"],c:1},
+ {q:"La vigilancia radiológica ambiental incluye:",
+  o:["Medición de tasas de dosis y contaminación","Solo dosímetros personales","Solo controles médicos","Solo registros"],c:0},
+ {q:"La dosimetría externa debe determinarse con periodicidad:",
+  o:["Anual","Mensual como máximo","Cada 5 años","Solo en accidentes"],c:1},
+ {q:"La dosimetría individual la realizan:",
+  o:["El hospital","El titular","Servicios autorizados por el CSN","El Servicio de Prevención"],c:2},
+ {q:"El historial dosimétrico se conserva:",
+  o:["10 años","20 años","Hasta 75 años o mínimo 30","Toda la vida del centro"],c:2},
+ {q:"Cuando un trabajador cambia de instalación debe:",
+  o:["Empezar historial nuevo","Entregar su historial dosimétrico","No hacer nada","Avisar solo al CSN"],c:1},
+ {q:"El historial dosimétrico es:",
+  o:["Público","Confidencial","Opcional","Solo del CSN"],c:1}
+];
+
+function cargar(){
+ let h=document.getElementById("huecos");h.innerHTML="";
+ HUECOS.forEach(x=>h.innerHTML+=`<li>${x.q}<br><input data-a="${x.a}"></li>`);
+
+ let v=document.getElementById("vf");v.innerHTML="";
+ VF.forEach((x,i)=>v.innerHTML+=`<p>${x.t}<br>
+ <label><input type="radio" name="v${i}" value="true">V</label>
+ <label><input type="radio" name="v${i}" value="false">F</label></p>`);
+
+ let r=document.getElementById("relacion");r.innerHTML="";
+ REL.forEach(x=>r.innerHTML+=`<li>${x.q}: <input data-a="${x.a}"></li>`);
+
+ let t=document.getElementById("test");t.innerHTML="";
+ TEST.forEach((x,i)=>t.innerHTML+=`<li>${x.q}<br>`+
+ x.o.map((o,j)=>`<label><input type="radio" name="t${i}" value="${j}"> ${o}</label>`).join("")+`</li>`);
+
+ document.getElementById("total").textContent="";
+ document.querySelectorAll(".ok,.bad").forEach(e=>e.classList.remove("ok","bad"));
+}
+
+function corregir(){
+ let score=0,max=0;
+ document.querySelectorAll("#huecos input").forEach(i=>{max++; if(norm(i.value)==norm(i.dataset.a)) score++;});
+ VF.forEach((x,i)=>{max++; let v=document.querySelector(`input[name=v${i}]:checked`); if(v && String(x.k)==v.value) score++;});
+ document.querySelectorAll("#relacion input").forEach(i=>{max++; if(norm(i.value)==norm(i.dataset.a)) score++;});
+ TEST.forEach((x,i)=>{max++; let v=document.querySelector(`input[name=t${i}]:checked`); if(v && Number(v.value)==x.c) score++;});
+ document.getElementById("total").textContent=`Resultado: ${score}/${max}`;
+}
+
+cargar();
+</script>
+
+</body>
+</html>
